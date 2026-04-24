@@ -115,4 +115,8 @@ public class SymbolTable {
         symbolsByLine.clear();
         referencesByLine.clear();
     }
+
+    public Map<String, List<Reference>> getAllReferencesByKey() {
+        return referencesByKey;
+    }
 }

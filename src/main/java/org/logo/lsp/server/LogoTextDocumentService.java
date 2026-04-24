@@ -14,8 +14,11 @@ import org.logo.lsp.provider.SemanticTokensProvider;
 import org.antlr.v4.runtime.CommonTokenStream;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.logo.lsp.provider.DefinitionProvider;
 import org.logo.lsp.provider.HoverProvider;
+import org.logo.lsp.provider.DiagnosticsProvider;
+
 
 
 
@@ -32,6 +35,7 @@ public class LogoTextDocumentService implements TextDocumentService {
     private final Map<String, String> documentTexts = new HashMap<>();
     private final DefinitionProvider definitionProvider = new DefinitionProvider();
     private final HoverProvider hoverProvider = new HoverProvider();
+    private final DiagnosticsProvider diagnosticsProvider = new DiagnosticsProvider();
 
 
 
@@ -62,6 +66,7 @@ public class LogoTextDocumentService implements TextDocumentService {
         analyzer.analyze(text, uri);
         analyzers.put(uri, analyzer);
         documentTexts.put(uri, text);
+        analyzeAndPublishDiagnostics(uri);
     }
 
     @Override
@@ -76,6 +81,7 @@ public class LogoTextDocumentService implements TextDocumentService {
         }
         analyzer.analyze(text, uri);
         documentTexts.put(uri, text);
+        analyzeAndPublishDiagnostics(uri);
     }
 
     @Override
@@ -83,6 +89,10 @@ public class LogoTextDocumentService implements TextDocumentService {
         String uri = params.getTextDocument().getUri();
         analyzers.remove(uri);
         documentTexts.remove(uri);
+
+        if (client != null) {
+            client.publishDiagnostics(new PublishDiagnosticsParams(uri, new ArrayList<>()));
+        }
     }
 
     @Override
@@ -154,5 +164,18 @@ public class LogoTextDocumentService implements TextDocumentService {
 
         return CompletableFuture.completedFuture(hover);
     }
+
+    private void analyzeAndPublishDiagnostics(String uri) {
+        DocumentAnalyzer analyzer = analyzers.get(uri);
+        if (analyzer == null || client == null) {
+            return;
+        }
+
+        List<Diagnostic> diagnostics = diagnosticsProvider.provide(
+                analyzer.getSymbolTable(), uri);
+
+        client.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics));
+    }
+
 
 }
