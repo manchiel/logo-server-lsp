@@ -14,6 +14,8 @@ import org.logo.lsp.provider.SemanticTokensProvider;
 import org.antlr.v4.runtime.CommonTokenStream;
 import java.util.HashMap;
 import java.util.Map;
+import org.logo.lsp.provider.DefinitionProvider;
+
 
 
 public class LogoTextDocumentService implements TextDocumentService {
@@ -26,6 +28,8 @@ public class LogoTextDocumentService implements TextDocumentService {
     private final Map<String, DocumentAnalyzer> analyzers = new HashMap<>();
     private final SemanticTokensProvider semanticTokensProvider = new SemanticTokensProvider();
     private final Map<String, String> documentTexts = new HashMap<>();
+    private final DefinitionProvider definitionProvider = new DefinitionProvider();
+
 
 
     public static SemanticTokensLegend getSemanticTokensLegend() {
@@ -109,8 +113,25 @@ public class LogoTextDocumentService implements TextDocumentService {
     @Override
     public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(
             DefinitionParams params) {
-        // TODO: Wire to DefinitionProvider
-        return CompletableFuture.completedFuture(Either.forLeft(new ArrayList<>()));
+        String uri = params.getTextDocument().getUri();
+        DocumentAnalyzer analyzer = analyzers.get(uri);
+
+        if (analyzer == null) {
+            return CompletableFuture.completedFuture(Either.forLeft(new ArrayList<>()));
+        }
+
+        int line = params.getPosition().getLine();
+        String scope = analyzer.getScopeAtPosition(line);
+
+        Location location = definitionProvider.provide(
+                analyzer.getSymbolTable(), uri, params.getPosition(), scope);
+
+        List<Location> result = new ArrayList<>();
+        if (location != null) {
+            result.add(location);
+        }
+
+        return CompletableFuture.completedFuture(Either.forLeft(result));
     }
 
     @Override
