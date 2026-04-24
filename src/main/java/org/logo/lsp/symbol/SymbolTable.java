@@ -5,14 +5,15 @@ import java.util.*;
 
 public class SymbolTable {
 
-
     private final Map<String, List<Symbol>> scopes = new HashMap<>();
-    private final List<Reference> references = new ArrayList<>();
+    private final Map<String, List<Reference>> referencesByKey = new HashMap<>();
+    private final Map<Integer, List<Symbol>> symbolsByLine = new HashMap<>();
+    private final Map<Integer, List<Reference>> referencesByLine = new HashMap<>();
 
     public void define(Symbol symbol, String scopeName) {
-        if (!scopes.containsKey(scopeName)) {
-            scopes.put(scopeName, new ArrayList<>());
-        }
+        scopes.computeIfAbsent(scopeName, k -> new ArrayList<>()).add(symbol);
+        int line = symbol.getRange().getStart().getLine();
+        symbolsByLine.computeIfAbsent(line, k -> new ArrayList<>()).add(symbol);
     }
 
     public Symbol resolve(String name, String scopeName) {
@@ -22,6 +23,7 @@ public class SymbolTable {
         if (local != null) {
             return local;
         }
+
         if (!scopeName.equals("global")) {
             return findInScope(lookupKey, "global");
         }
@@ -43,18 +45,43 @@ public class SymbolTable {
     }
 
     public void addReference(Reference ref) {
-        references.add(ref);
+        referencesByKey.computeIfAbsent(ref.lookupKey(), k -> new ArrayList<>()).add(ref);
+
+        int line = ref.range().getStart().getLine();
+        referencesByLine.computeIfAbsent(line, k -> new ArrayList<>()).add(ref);
     }
 
     public List<Reference> getReferences(String lookupKey) {
         String key = lookupKey.toLowerCase();
-        List<Reference> result = new ArrayList<>();
-        for (Reference ref : references) {
-            if (ref.lookupKey().equals(key)) {
-                result.add(ref);
+        return referencesByKey.getOrDefault(key, List.of());
+    }
+
+    public Symbol findSymbolAtPosition(String documentUri, int line, int character) {
+        List<Symbol> lineSymbols = symbolsByLine.get(line);
+        if (lineSymbols == null) {
+            return null;
+        }
+        for (Symbol symbol : lineSymbols) {
+            if (symbol.getDocumentUri().equals(documentUri)
+                    && containsPosition(symbol.getRange(), line, character)) {
+                return symbol;
             }
         }
-        return result;
+        return null;
+    }
+
+    public Reference findReferenceAtPosition(String documentUri, int line, int character) {
+        List<Reference> lineRefs = referencesByLine.get(line);
+        if (lineRefs == null) {
+            return null;
+        }
+        for (Reference ref : lineRefs) {
+            if (ref.documentUri().equals(documentUri)
+                    && containsPosition(ref.range(), line, character)) {
+                return ref;
+            }
+        }
+        return null;
     }
 
     public List<Symbol> getSymbolsInScope(String scopeName) {
@@ -67,24 +94,6 @@ public class SymbolTable {
             all.addAll(symbols);
         }
         return all;
-    }
-
-    public Symbol findSymbolAtPosition(String documentUri, int line, int character) {
-        for (Symbol symbol : getAllSymbols()) {
-            if (symbol.getDocumentUri().equals(documentUri) && containsPosition(symbol.getRange(), line, character)) {
-                return symbol;
-            }
-        }
-        return null;
-    }
-
-    public Reference findReferenceAtPosition(String documentUri, int line, int character) {
-        for (Reference ref : references) {
-            if (ref.documentUri().equals(documentUri) && containsPosition(ref.range(), line, character)) {
-                return ref;
-            }
-        }
-        return null;
     }
 
     private boolean containsPosition(Range range, int line, int character) {
@@ -102,6 +111,8 @@ public class SymbolTable {
 
     public void clear() {
         scopes.clear();
-        references.clear();
+        referencesByKey.clear();
+        symbolsByLine.clear();
+        referencesByLine.clear();
     }
 }

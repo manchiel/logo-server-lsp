@@ -1,9 +1,6 @@
 .gradle/
 build/
 .idea/
-.settings/
-.project/
-.classpath/
 bin/
 out/
 *.log
