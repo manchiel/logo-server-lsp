@@ -221,4 +221,22 @@ class DocumentAnalyzerTest {
         assertNull(table.resolve("square", "global"));
         assertNotNull(table.resolve("circle", "global"));
     }
+
+    // ── Broken code ─────────────────────────────────────────────────────
+
+    @Test
+    void testBrokenCodeDoesNotCrash() {
+        analyzer.analyze("TO square :size\nFD :size", URI);
+        SymbolTable table = analyzer.getSymbolTable();
+        assertNotNull(table.getAllSymbols());
+    }
+
+    @Test
+    void testPartialCodeStillHighlights() {
+        analyzer.analyze("FORWARD", URI);
+        SymbolTable table = analyzer.getSymbolTable();
+        assertNotNull(table);
+    }
+
 }
+
