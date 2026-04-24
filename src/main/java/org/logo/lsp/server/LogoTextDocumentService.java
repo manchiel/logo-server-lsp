@@ -15,6 +15,8 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import java.util.HashMap;
 import java.util.Map;
 import org.logo.lsp.provider.DefinitionProvider;
+import org.logo.lsp.provider.HoverProvider;
+
 
 
 
@@ -29,6 +31,7 @@ public class LogoTextDocumentService implements TextDocumentService {
     private final SemanticTokensProvider semanticTokensProvider = new SemanticTokensProvider();
     private final Map<String, String> documentTexts = new HashMap<>();
     private final DefinitionProvider definitionProvider = new DefinitionProvider();
+    private final HoverProvider hoverProvider = new HoverProvider();
 
 
 
@@ -136,7 +139,20 @@ public class LogoTextDocumentService implements TextDocumentService {
 
     @Override
     public CompletableFuture<Hover> hover(HoverParams params) {
-        // TODO: Wire to HoverProvider
-        return CompletableFuture.completedFuture(null);
+        String uri = params.getTextDocument().getUri();
+        DocumentAnalyzer analyzer = analyzers.get(uri);
+
+        if (analyzer == null) {
+            return CompletableFuture.completedFuture(null);
+        }
+
+        int line = params.getPosition().getLine();
+        String scope = analyzer.getScopeAtPosition(line);
+
+        Hover hover = hoverProvider.provide(
+                analyzer.getSymbolTable(), uri, params.getPosition(), scope);
+
+        return CompletableFuture.completedFuture(hover);
     }
+
 }
