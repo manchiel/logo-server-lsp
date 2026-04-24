@@ -152,7 +152,7 @@ NAME        : [a-zA-Z_][a-zA-Z0-9_]* ;
 
 NEWLINE     : '\r'? '\n' ;
 WS          : [ \t]+ -> skip ;
-COMMENT     : ';' ~[\r\n]* -> skip ;
+COMMENT : ';' ~[\r\n]* -> channel(HIDDEN) ;
 
 fragment A: [aA]; fragment B: [bB]; fragment C: [cC]; fragment D: [dD];
 fragment E: [eE]; fragment F: [fF]; fragment G: [gG]; fragment H: [hH];
