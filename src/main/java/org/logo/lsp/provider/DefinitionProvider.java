@@ -15,8 +15,7 @@ public class DefinitionProvider {
 
         Reference ref = symbolTable.findReferenceAtPosition(documentUri, line, character);
         if (ref != null) {
-
-            Symbol symbol = symbolTable.resolve(ref.lookupKey(), currentScope);
+            Symbol symbol = symbolTable.resolve(ref.lookupKey(), ref.scope());
             if (symbol != null) {
                 return new Location(symbol.getDocumentUri(), symbol.getRange());
             }

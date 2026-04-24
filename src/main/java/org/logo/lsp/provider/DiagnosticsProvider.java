@@ -29,14 +29,12 @@ public class DiagnosticsProvider {
         for (List<Reference> refs : symbolTable.getAllReferencesByKey().values()) {
             if (refs.isEmpty()) continue;
 
-            // Resolve once per symbol name, not once per reference
-            Reference first = refs.get(0);
-            Symbol resolved = symbolTable.resolve(first.lookupKey(), "global");
+            for (Reference ref : refs) {
+                if (!ref.documentUri().equals(documentUri)) continue;
 
-            if (resolved == null && !isBuiltinCommand(first.lookupKey())) {
-                for (Reference ref : refs) {
-                    if (!ref.documentUri().equals(documentUri)) continue;
+                Symbol resolved = symbolTable.resolve(ref.lookupKey(), ref.scope());
 
+                if (resolved == null && !isBuiltinCommand(ref.lookupKey())) {
                     Diagnostic diag = new Diagnostic();
                     diag.setRange(ref.range());
                     diag.setSeverity(DiagnosticSeverity.Error);

@@ -143,7 +143,8 @@ public class LogoSymbolVisitor extends LogoBaseVisitor<Void> {
         Reference ref = new Reference(
                 nameToken.getText().toLowerCase(),
                 documentUri,
-                range
+                range,
+                currentScope
         );
         symbolTable.addReference(ref);
 
@@ -158,7 +159,8 @@ public class LogoSymbolVisitor extends LogoBaseVisitor<Void> {
         Reference ref = new Reference(
                 nameToken.getText().toLowerCase(),
                 documentUri,
-                tokenToRange(nameToken)
+                tokenToRange(nameToken),
+                currentScope
         );
         symbolTable.addReference(ref);
 
