@@ -132,11 +132,18 @@ public class LogoSymbolVisitor extends LogoBaseVisitor<Void> {
     public Void visitVariableReference(LogoParser.VariableReferenceContext ctx) {
         if (collectingProcedures) return null;
 
+        Token colonToken = ctx.COLON().getSymbol();
         Token nameToken = ctx.NAME().getSymbol();
+        Range range = new Range(
+                new Position(colonToken.getLine() - 1, colonToken.getCharPositionInLine()),
+                new Position(nameToken.getLine() - 1,
+                        nameToken.getCharPositionInLine() + nameToken.getText().length())
+        );
+
         Reference ref = new Reference(
                 nameToken.getText().toLowerCase(),
                 documentUri,
-                tokenToRange(nameToken)
+                range
         );
         symbolTable.addReference(ref);
 
