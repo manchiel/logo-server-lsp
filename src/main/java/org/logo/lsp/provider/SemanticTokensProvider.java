@@ -4,6 +4,10 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.logo.lsp.parser.LogoLexer;
+import org.logo.lsp.symbol.Reference;
+import org.logo.lsp.symbol.Symbol;
+import org.logo.lsp.symbol.SymbolTable;
+import org.logo.lsp.symbol.SymbolType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,17 +23,48 @@ public class SemanticTokensProvider {
     private static final int TYPE_OPERATOR = 6;
     private static final int TYPE_COMMENT = 7;
 
-    public SemanticTokens provide(CommonTokenStream tokenStream) {
+    public SemanticTokens provide(CommonTokenStream tokenStream, SymbolTable symbolTable, String uri) {
         List<Integer> data = new ArrayList<>();
 
         int prevLine = 0;
         int prevColumn = 0;
 
         for (Token token : tokenStream.getTokens()) {
-            int tokenType = mapTokenType(token.getType());
+            int antlrType = token.getType();
+            int tokenType = mapTokenType(antlrType);
 
             if (tokenType == -1) {
                 continue;
+            }
+
+            if (antlrType == LogoLexer.NAME) {
+                int line = token.getLine() - 1;
+                int charPos = token.getCharPositionInLine();
+                
+                Reference ref = symbolTable.findReferenceAtPosition(uri, line, charPos);
+                if (ref != null) {
+                    Symbol resolved = symbolTable.resolve(ref.lookupKey(), ref.scope());
+                    if (resolved != null) {
+                        if (resolved.getType() == SymbolType.PARAMETER) {
+                            tokenType = TYPE_PARAMETER;
+                        } else if (resolved.getType() == SymbolType.VARIABLE) {
+                            tokenType = TYPE_VARIABLE;
+                        } else if (resolved.getType() == SymbolType.PROCEDURE) {
+                            tokenType = TYPE_FUNCTION;
+                        }
+                    }
+                } else {
+                    Symbol sym = symbolTable.findSymbolAtPosition(uri, line, charPos);
+                    if (sym != null) {
+                        if (sym.getType() == SymbolType.PARAMETER) {
+                            tokenType = TYPE_PARAMETER;
+                        } else if (sym.getType() == SymbolType.VARIABLE) {
+                            tokenType = TYPE_VARIABLE;
+                        } else if (sym.getType() == SymbolType.PROCEDURE) {
+                            tokenType = TYPE_FUNCTION;
+                        }
+                    }
+                }
             }
 
             int line = token.getLine() - 1;

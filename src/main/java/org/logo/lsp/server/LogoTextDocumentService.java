@@ -119,8 +119,14 @@ public class LogoTextDocumentService implements TextDocumentService {
         }
 
         CommonTokenStream tokens = analyzer.getTokenStream(text);
-        SemanticTokens result = semanticTokensProvider.provide(tokens);
+        SemanticTokens result = semanticTokensProvider.provide(tokens, analyzer.getSymbolTable(), uri);
         return CompletableFuture.completedFuture(result);
+    }
+
+    @Override
+    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> declaration(
+            DeclarationParams params) {
+        return definition(new DefinitionParams(params.getTextDocument(), params.getPosition()));
     }
 
     @Override

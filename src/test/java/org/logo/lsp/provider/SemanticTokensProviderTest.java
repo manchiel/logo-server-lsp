@@ -17,6 +17,7 @@ class SemanticTokensProviderTest {
 
     private static final int TYPE_KEYWORD = 0;
     private static final int TYPE_FUNCTION = 1;
+    private static final int TYPE_PARAMETER = 2;
     private static final int TYPE_VARIABLE = 3;
     private static final int TYPE_NUMBER = 4;
     private static final int TYPE_STRING = 5;
@@ -30,8 +31,9 @@ class SemanticTokensProviderTest {
     }
 
     private SemanticTokens getTokens(String code) {
+        analyzer.analyze(code, "file:///test.logo");
         CommonTokenStream stream = analyzer.getTokenStream(code);
-        return provider.provide(stream);
+        return provider.provide(stream, analyzer.getSymbolTable(), "file:///test.logo");
     }
 
     private int getTokenType(List<Integer> data, int tokenIndex) {
@@ -120,7 +122,7 @@ class SemanticTokensProviderTest {
         assertEquals(TYPE_KEYWORD, getTokenType(data, 0));  // TO
         assertEquals(TYPE_FUNCTION, getTokenType(data, 1));  // square
         assertEquals(TYPE_VARIABLE, getTokenType(data, 2));  // :
-        assertEquals(TYPE_FUNCTION, getTokenType(data, 3));  // size (NAME token)
+        assertEquals(TYPE_PARAMETER, getTokenType(data, 3));  // size (NAME token)
         assertEquals(TYPE_KEYWORD, getTokenType(data, 4));   // END
     }
 

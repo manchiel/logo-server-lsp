@@ -29,6 +29,7 @@ public class LogoLanguageServer implements LanguageServer, LanguageClientAware {
         capabilities.setSemanticTokensProvider(semanticTokensOptions);
 
         capabilities.setDefinitionProvider(true);
+        capabilities.setDeclarationProvider(true);
 
         capabilities.setHoverProvider(true);
 

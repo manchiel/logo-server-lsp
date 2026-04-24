@@ -1,0 +1,10 @@
+TO square :size
+  REPEAT 4 [ FD :size RT 90 ]
+END
+
+TO circle :radius
+  REPEAT 36 [ FD :radius RT 10 ]
+END
+
+square 100
+circle 5

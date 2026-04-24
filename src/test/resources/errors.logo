@@ -1,0 +1,3 @@
+; This file has intentional errors for testing diagnostics
+undefined_proc 100
+FD :nonexistent

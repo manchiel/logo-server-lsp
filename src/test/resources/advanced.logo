@@ -1,0 +1,38 @@
+MAKE "depth 5
+spiral :depth
+
+TO spiral :n
+  IF :n = 0 [ STOP ]
+  FD :n * 10
+  RT 90
+  spiral :n - 1
+END
+
+TO tree :size
+  IF :size < 5 [ STOP ]
+  FD :size
+  LT 30
+  tree :size * 0.7
+  RT 60
+  tree :size * 0.7
+  LT 30
+  BK :size
+END
+
+; Variable shadowing
+MAKE "x 100
+TO myproc :x
+  LOCAL "temp
+  MAKE "temp :x + 10
+  FD :temp
+END
+
+; Procedure redefinition
+TO square :s
+  REPEAT 4 [ FD :s RT 90 ]
+END
+
+; Case insensitivity
+FORWARD 10
+forward 20
+Forward 30
