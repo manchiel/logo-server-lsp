@@ -4,6 +4,8 @@ import org.antlr.v4.runtime.*;
 import org.logo.lsp.parser.LogoLexer;
 import org.logo.lsp.parser.LogoParser;
 import org.logo.lsp.symbol.SymbolTable;
+import org.logo.lsp.parser.LogoParser;
+
 
 public class DocumentAnalyzer {
 
@@ -49,4 +51,25 @@ public class DocumentAnalyzer {
 
         return tokens;
     }
-}
+
+    public String getScopeAtPosition(int line) {
+        if (parseTree == null) return "global";
+
+        for (LogoParser.LineContext lineCtx : parseTree.line()) {
+            for (LogoParser.StatementContext stmt : lineCtx.statement()) {
+                if (stmt.procedureDefinition() != null) {
+                    LogoParser.ProcedureDefinitionContext proc = stmt.procedureDefinition();
+                    int startLine = proc.getStart().getLine() - 1;
+                    int endLine = proc.getStop().getLine() - 1;
+
+                    if (line >= startLine && line <= endLine) {
+                        return proc.name.getText().toLowerCase();
+                    }
+                }
+            }
+        }
+
+        return "global";
+    }
+
+    }
