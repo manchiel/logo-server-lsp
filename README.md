@@ -12,15 +12,19 @@ An LSP server for the LOGO programming language, built in Java with ANTLR4 for p
 ### Screenshots
 
 ![Syntax Highlighting](screenshots/syntax-highlight.png)
+
 *Semantic highlighting with context-aware token classification*
 
 ![Hover on procedure](screenshots/hover_procedure.png)
+
 *Hover tooltip showing procedure signature and parameters*
 
 ![Hover on variable](screenshots/hover_variable.png)
+
 *Hover tooltip showing variable scope*
 
 ![Diagnostics](screenshots/diagnostics.png)
+
 *Real-time error detection for undefined procedures*
 
 ## LOGO Dialect
