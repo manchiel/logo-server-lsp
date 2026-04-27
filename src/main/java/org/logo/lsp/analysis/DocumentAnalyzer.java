@@ -5,33 +5,44 @@ import org.logo.lsp.parser.LogoLexer;
 import org.logo.lsp.parser.LogoParser;
 import org.logo.lsp.symbol.SymbolTable;
 import org.logo.lsp.parser.LogoParser;
+import org.eclipse.lsp4j.Diagnostic;
+import java.util.ArrayList;
+import java.util.List;
+
 
 
 public class DocumentAnalyzer {
 
     private final SymbolTable symbolTable = new SymbolTable();
     private LogoParser.ProgramContext parseTree;
+    private final List<Diagnostic> syntaxErrors = new ArrayList<>();
+
 
     public void analyze(String text, String documentUri) {
         symbolTable.clear();
+        syntaxErrors.clear();
 
         CharStream input = CharStreams.fromString(text);
         LogoLexer lexer = new LogoLexer(input);
-
         lexer.removeErrorListeners();
+
+        LogoErrorListener errorListener = new LogoErrorListener();
 
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         tokens.fill();
         LogoParser parser = new LogoParser(tokens);
         parser.removeErrorListeners();
+        parser.addErrorListener(errorListener);
 
         parseTree = parser.program();
 
+        syntaxErrors.addAll(errorListener.getErrors());
+
         LogoSymbolVisitor visitor = new LogoSymbolVisitor(symbolTable, documentUri);
         visitor.collectProcedures(parseTree);
-
         visitor.analyze(parseTree);
     }
+
 
     public SymbolTable getSymbolTable() {
         return symbolTable;
@@ -72,4 +83,9 @@ public class DocumentAnalyzer {
         return "global";
     }
 
+    public List<Diagnostic> getSyntaxErrors() {
+        return syntaxErrors;
     }
+
+
+}

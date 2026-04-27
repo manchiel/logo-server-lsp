@@ -62,6 +62,12 @@ The server uses stdio transport — it reads JSON-RPC on stdin and writes respon
 4. Map to `*.logo` file type
 5. Open any `.logo` file — all features activate automatically
 
+## Technology Choices
+
+- **Gradle**: Chosen over Maven for its performance (incremental builds) and flexibility. The ANTLR plugin integrates seamlessly, handling code generation during the build process. The included Gradle wrapper (`gradlew`) ensures the project builds reliably on any machine without requiring a pre-installed Gradle environment.
+- **ANTLR4**: Chosen to avoid the overhead of building a hand-written recursive descent parser, which would require manual tokenization and error recovery. While ANTLR produces a concrete parse tree rather than a pure abstract syntax tree (AST), using the Visitor pattern allowed me to efficiently traverse only the relevant nodes. Building a clean, intermediate AST would add unnecessary complexity since I am only analyzing the code, not compiling it to another target.
+- **LSP4J**: Recommended by the assignment, this library abstracts away the lower-level LSP JSON-RPC serialization, allowing me to focus entirely on the language semantics and analysis logic.
+
 ## Architecture
 
 ```
@@ -111,7 +117,7 @@ IDE requests feature
 
 **Scope-aware references** — each reference stores the scope where it was created. This ensures `:size` inside `TO square` resolves to the parameter, not a global variable with the same name.
 
-**Line-indexed lookups** — the SymbolTable indexes symbols by line number (HashMap). Hover and go-to-definition do O(1) line lookup instead of O(n) scan through all symbols — critical since hover fires on every mouse movement.
+**Line-indexed lookups (Thread-Safe)** — he SymbolTable indexes symbols by line number (ConcurrentHashMap). Hover and go-to-definition do O(1) line lookup instead of O(n) scan through all symbols — critical since hover fires on every mouse movement.
 
 **Context-aware semantic tokens** — the `SemanticTokensProvider` cross-references `NAME` tokens with the SymbolTable to determine if they represent procedures, parameters, or variables, rather than naively classifying all names as one type.
 
@@ -125,3 +131,22 @@ IDE requests feature
 - **Procedure redefinition** — last definition wins, warning on earlier ones
 - **Broken code** — ANTLR error recovery prevents crashes on incomplete input
 - **Recursion** — recursive calls tracked as references without analysis loops
+
+## Testing
+
+The project includes 40+ unit tests covering the full analysis pipeline:
+
+```bash
+./gradlew test
+```
+
+Tests cover: procedure definitions, forward references, case insensitivity, variable shadowing, procedure redefinition, positional lookups, broken code recovery, semantic tokens, go-to-definition, and diagnostics.
+
+## Known Limitations and Future Work
+
+- **No hover for built-in commands** — hovering over `FORWARD` or `REPEAT` shows nothing. Fix: initialize the SymbolTable with built-in symbols and descriptions
+- **No argument count validation** — the SymbolTable stores parameter counts per procedure, enabling future arity checking
+- **Unknown symbol highlighting** — undefined names default to function highlighting instead of flagging as unknown
+- **No completion support** — could be added using the existing SymbolTable to suggest procedures and visible variables
+- **No rename refactoring** — reference tracking infrastructure exists but rename is not yet wired
+- **Full document sync** — incremental sync would improve performance on large files

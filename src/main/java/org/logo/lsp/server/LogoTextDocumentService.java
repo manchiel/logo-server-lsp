@@ -12,13 +12,13 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.logo.lsp.analysis.DocumentAnalyzer;
 import org.logo.lsp.provider.SemanticTokensProvider;
 import org.antlr.v4.runtime.CommonTokenStream;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.logo.lsp.provider.DefinitionProvider;
 import org.logo.lsp.provider.HoverProvider;
 import org.logo.lsp.provider.DiagnosticsProvider;
-
+import org.eclipse.lsp4j.Diagnostic;
 
 
 
@@ -30,9 +30,9 @@ public class LogoTextDocumentService implements TextDocumentService {
     public void connect(LanguageClient client) {
         this.client = client;
     }
-    private final Map<String, DocumentAnalyzer> analyzers = new HashMap<>();
+    private final Map<String, DocumentAnalyzer> analyzers = new ConcurrentHashMap<>();
     private final SemanticTokensProvider semanticTokensProvider = new SemanticTokensProvider();
-    private final Map<String, String> documentTexts = new HashMap<>();
+    private final Map<String, String> documentTexts = new ConcurrentHashMap<>();
     private final DefinitionProvider definitionProvider = new DefinitionProvider();
     private final HoverProvider hoverProvider = new HoverProvider();
     private final DiagnosticsProvider diagnosticsProvider = new DiagnosticsProvider();
@@ -177,8 +177,9 @@ public class LogoTextDocumentService implements TextDocumentService {
             return;
         }
 
-        List<Diagnostic> diagnostics = diagnosticsProvider.provide(
-                analyzer.getSymbolTable(), uri);
+        List<Diagnostic> diagnostics = new ArrayList<>();
+        diagnostics.addAll(analyzer.getSyntaxErrors());
+        diagnostics.addAll(diagnosticsProvider.provide(analyzer.getSymbolTable(), uri));
 
         client.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics));
     }
