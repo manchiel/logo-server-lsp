@@ -7,8 +7,7 @@ An LSP server for the LOGO programming language, built in Java with ANTLR4 for p
 - **Syntax highlighting** — semantic tokens for keywords, procedures, variables, numbers, strings, operators, and comments
 - **Go-to-definition** — Ctrl+click on procedure calls and variable references to jump to declarations
 - **Hover** — tooltips showing symbol type, scope, and procedure signatures
-- **Diagnostics** — real-time error detection for undefined symbols and redefinition warnings
-
+- **Diagnostics** — real-time error detection: syntax errors, undefined symbols, and redefinition warnings
 ### Screenshots
 
 ![Syntax Highlighting](screenshots/syntax-highlight.png)
@@ -83,6 +82,7 @@ src/main/
 │   ├── analysis/
 │   │   ├── DocumentAnalyzer.java            # Parse → analyze pipeline
 │   │   └── LogoSymbolVisitor.java           # Two-pass ANTLR visitor
+│   │   └── LogoErrorListener.java           # ANTLR syntax error listener
 │   ├── symbol/
 │   │   ├── Symbol.java                      # Declaration (name, type, range)
 │   │   ├── SymbolType.java                  # PROCEDURE | PARAMETER | VARIABLE
